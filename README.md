@@ -1,88 +1,102 @@
-# 🤖 Prediction Bot Telegram
+# 🤖 Prediction Bot — Polymarket NYC Weather
 
-![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
-![Telegram](https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white)
-![MIT License](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)
+[![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)](https://www.python.org/)
+[![MIT License](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](LICENSE)
 
-An automated Telegram bot developed in Python, designed to monitor external data patterns and send real-time prediction signals to specific groups or channels.
+A Python script that scans active **NYC temperature markets on Polymarket**, fetches real weather forecasts via the **Open-Meteo API**, and identifies which market outcome has the smallest edge against the predicted temperature.
 
 ---
 
-## 🌐 External Integration & Logic
+## 🌐 How It Works
 
-The bot operates by connecting to external data sources to perform its predictions:
-
-* **External Data Fetching:** It connects to third-party APIs or web scrapers to monitor real-time results (e.g., Casino games, Sports, or Financial markets).
-* **Pattern Recognition:** The core logic analyzes the last $n$ results to identify predefined statistical sequences.
-* **Automated Signaling:** Once a pattern is confirmed, the bot triggers an API call to Telegram to notify users of the "Entry" and the "Result" (Green/Red).
+1. **Scrape** — `scraper.py` queries the [Polymarket Gamma API](https://gamma-api.polymarket.com/events) for active events tagged as `weather`.
+2. **Parse** — `parser.py` filters only **NYC max temperature** markets and extracts the unit (Celsius or Fahrenheit) from the event slug.
+3. **Forecast** — `weather.py` calls the [Open-Meteo](https://open-meteo.com/) free API and returns the forecasted max temperature for the market's end date.
+4. **Decide** — `decision.py` compares the forecast against each market's price range and ranks them by proximity — the closer the predicted temperature is to a range, the better the market.
+5. **Output** — `main.py` ties everything together and prints the best and second-best market options to the terminal.
 
 ---
 
 ## 🚀 Features
 
-* **Real-Time Analysis:** Continuous monitoring of input data to identify entry patterns.
-* **Customized Messaging:** Formatted alerts including emojis, call-to-action links, and clear instructions.
-* **Signal Management:** Built-in logic for identifying "Green" (win) or "Red" (loss) results.
-* **Secure Configuration:** Environment variable support to keep sensitive credentials safe.
+- Fetches up to 300 active weather markets from Polymarket in a single call.
+- Filters exclusively for **NYC max temperature** markets.
+- Parses market price ranges via regex (e.g. `72–75°F`, `80°F or higher`, `65°F or below`).
+- Retrieves daily max temperature forecasts from Open-Meteo — no API key required.
+- Ranks markets by how close the forecast is to each price band.
+
+---
 
 ## 🛠️ Tech Stack
 
-* **[Python 3.x](https://www.python.org/)** - Core programming language.
-* **[python-telegram-bot](https://python-telegram-bot.org/)** - For seamless Telegram API integration.
-* **[Dotenv](https://pypi.org/project/python-dotenv/)** - For managing environment variables.
-* **[Requests](https://ps.getpy.org/en/latest/)** - For fetching data from external sources.
+| Library | Purpose |
+|---|---|
+| [requests](https://docs.python-requests.org/) | HTTP calls to Polymarket API |
+| [openmeteo-requests](https://pypi.org/project/openmeteo-requests/) | Open-Meteo weather API client |
+
+---
 
 ## 📋 Prerequisites
 
-1.  **Bot Token:** Obtain one from [@BotFather](https://t.me/botfather).
-2.  **Chat ID:** The ID of the Channel or Group where the bot will post (the bot must be an Admin).
-3.  **External API Key:** (If required by the data source you are monitoring).
-4.  **Python Environment:** Version 3.8 or higher.
+- Python **3.8+**
+- No API keys required — both Polymarket Gamma API and Open-Meteo are free and public.
+
+---
 
 ## 🔧 Installation & Setup
 
-1.  **Clone the repository:**
-    ```bash
-    git clone [https://github.com/Gu1lz/prediction-bot-telegram.git](https://github.com/Gu1lz/prediction-bot-telegram.git)
-    cd prediction-bot-telegram
-    ```
+1. **Clone the repository:**
 
-2.  **Install dependencies:**
-    ```bash
-    pip install -r requirements.txt
-    ```
+```bash
+git clone https://github.com/Gu1lz/prediction-bot-telegram.git
+cd prediction-bot-telegram
+```
 
-3.  **Configure credentials:**
-    Create a `.env` file in the project root:
-    ```env
-    TELEGRAM_TOKEN="YOUR_BOT_TOKEN_HERE"
-    CHAT_ID="YOUR_CHAT_ID_HERE"
-    EXTERNAL_API_URL="URL_OF_THE_DATA_SOURCE"
-    ```
+2. **Install dependencies:**
 
-The bot will initialize, establish a connection with the external data stream, and begin monitoring based on the core system logic.
-📂 Project Structure
+```bash
+pip install requests openmeteo-requests
+```
 
-    main.py: Entry point that initializes and runs the bot loop.
+3. **Run:**
 
-    src/: Contains the core analysis logic and message templates.
+```bash
+python main.py
+```
 
-    utils/: Helper functions (text formatting, mathematical calculations, etc.).
+The script will fetch active NYC weather markets, retrieve the temperature forecast, and print the ranked market outcomes to stdout.
 
-🤝 Contributing
+---
 
-    Fork the project.
+## 📂 Project Structure
 
-    Create your Feature Branch: git checkout -b feature/AmazingFeature.
+```
+prediction-bot-telegram/
+├── main.py        # Entry point — orchestrates the full pipeline
+├── scraper.py     # Fetches active weather events from Polymarket Gamma API
+├── parser.py      # Filters NYC max temperature markets and extracts the unit
+├── weather.py     # Queries Open-Meteo for the forecasted max temperature
+├── decision.py    # Ranks markets by proximity of forecast to each price range
+├── final.py       # (auxiliary)
+└── README.md
+```
 
-    Commit your changes: git commit -m 'Add some AmazingFeature'.
+---
 
-    Push to the Branch: git push origin feature/AmazingFeature.
+## 🤝 Contributing
 
-    Open a Pull Request.
+1. Fork the project.
+2. Create your feature branch: `git checkout -b feature/AmazingFeature`
+3. Commit your changes: `git commit -m 'Add some AmazingFeature'`
+4. Push to the branch: `git push origin feature/AmazingFeature`
+5. Open a Pull Request.
 
-📝 License
+---
 
-This project is licensed under the MIT License. See the LICENSE file for details.
+## 📝 License
 
-Developed with ☕ by Gu1lz
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+---
+
+Developed with ☕ by [Gu1lz](https://github.com/Gu1lz)
